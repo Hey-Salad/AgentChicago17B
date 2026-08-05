@@ -1,0 +1,131 @@
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --panel: #0c0c0c;
+  --panel-2: #161212;
+  --line: #262020;
+  --line-strong: #3a2c2c;
+  --text: #ffffff;
+  --soft: #f2f2f2;
+  --muted: #9a9a9a;
+  --lake: #ed4c4c;
+  --lake-dim: rgba(237, 76, 76, 0.14);
+  --peach: #faa09a;
+  --peach-light: #ffd0cd;
+  --accent: #ffffff;
+  --danger: #ed4c4c;
+  --mark-bg: #141010;
+  --focus: rgba(237, 76, 76, 0.45);
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+
+  --font-ui: 'Figtree', 'Helvetica Neue', sans-serif;
+  --font-display: 'Figtree', 'Helvetica Neue', sans-serif;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-composer: 22px;
+  --sidebar: 268px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #ffd0cd;
+  --panel: #ffffff;
+  --panel-2: #fff1ef;
+  --line: #f0b4af;
+  --line-strong: #ed4c4c;
+  --text: #000000;
+  --soft: #111111;
+  --muted: #3a3a3a;
+  --lake: #ed4c4c;
+  --lake-dim: rgba(237, 76, 76, 0.1);
+  --peach: #faa09a;
+  --peach-light: #ffd0cd;
+  --accent: #000000;
+  --danger: #ed4c4c;
+  --mark-bg: #ffe4e1;
+  --focus: rgba(237, 76, 76, 0.35);
+  --shadow: 0 12px 36px rgba(80, 20, 20, 0.12);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  height: 100%;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--lake) 55%, transparent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--lake);
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  outline: none;
+}
+
+textarea,
+input {
+  caret-color: var(--lake);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.theme-animating,
+html.theme-animating body,
+html.theme-animating .shell,
+html.theme-animating .sidebar,
+html.theme-animating .workspace,
+html.theme-animating .composer {
+  transition:
+    background 200ms var(--ease-out),
+    color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}

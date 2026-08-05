@@ -1,0 +1,158 @@
+{
+  "provider": "cloudflare-workers-ai",
+  "results": [
+    {
+      "model": "@cf/meta/llama-3.2-3b-instruct",
+      "ok": true,
+      "score": 100.0,
+      "elapsed_s": 1.43,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 222,
+      "completion_tokens": 197,
+      "summary": "AI agents can use a combination of finding, context, gap, and recommendation cards to synthesize findings.",
+      "notes": ""
+    },
+    {
+      "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+      "ok": true,
+      "score": 100.0,
+      "elapsed_s": 2.83,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 222,
+      "completion_tokens": 163,
+      "summary": "Use AI tools",
+      "notes": ""
+    },
+    {
+      "model": "@cf/openai/gpt-oss-20b",
+      "ok": true,
+      "score": 91.0,
+      "elapsed_s": 6.96,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 261,
+      "completion_tokens": 1010,
+      "summary": "Summarize insights, prioritize clarity, limit card count for usability.",
+      "notes": ""
+    },
+    {
+      "model": "@cf/meta/llama-4-scout-17b-16e-instruct",
+      "ok": true,
+      "score": 91.0,
+      "elapsed_s": 7.24,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 200,
+      "completion_tokens": 332,
+      "summary": "AI agents should use varied card types and synthesis methods.",
+      "notes": ""
+    },
+    {
+      "model": "@cf/mistralai/mistral-small-3.1-24b-instruct",
+      "ok": true,
+      "score": 82.0,
+      "elapsed_s": 10.25,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 203,
+      "completion_tokens": 516,
+      "summary": "Synthesizing findings into cards requires clear titles, concise bullet points, and relevance. Structured information aid",
+      "notes": ""
+    },
+    {
+      "model": "@cf/zai-org/glm-5.2",
+      "ok": true,
+      "score": 82.0,
+      "elapsed_s": 11.78,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 200,
+      "completion_tokens": 779,
+      "summary": "Combine atomic notes into typed cards with clear schemas, confidence levels, and concise evidence.",
+      "notes": ""
+    },
+    {
+      "model": "@cf/meta/llama-3.1-8b-instruct-fp8",
+      "ok": true,
+      "score": 82.0,
+      "elapsed_s": 12.66,
+      "cards": 4,
+      "kinds": [
+        "context",
+        "finding",
+        "gap",
+        "recommendation"
+      ],
+      "prompt_tokens": 203,
+      "completion_tokens": 257,
+      "summary": "Synthesize research findings into clear, concise, and actionable cards that address key research questions and outcomes.",
+      "notes": ""
+    },
+    {
+      "model": "@cf/openai/gpt-oss-120b",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": 12.53,
+      "cards": 0,
+      "kinds": [],
+      "prompt_tokens": 259,
+      "completion_tokens": 1200,
+      "summary": "",
+      "notes": "parse_fail chars=0"
+    },
+    {
+      "model": "@cf/zai-org/glm-4.7-flash",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": 25.02,
+      "cards": 0,
+      "kinds": [],
+      "prompt_tokens": 193,
+      "completion_tokens": 1200,
+      "summary": "",
+      "notes": "parse_fail chars=66"
+    },
+    {
+      "model": "@cf/qwen/qwen2.5-coder-32b-instruct",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "cards": 0,
+      "kinds": [],
+      "notes": "AttributeError:'dict' object has no attribute 'strip'",
+      "summary": ""
+    }
+  ]
+}

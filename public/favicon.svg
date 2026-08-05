@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#000000"/>
+  <!-- Deep-dish slice (brandkit) -->
+  <path d="M18 14c10-2 22 2 28 12l-20 30L10 34C12 24 14 16 18 14z" fill="#faa09a"/>
+  <path d="M20 16c8-1.5 18 2 23 10L28 50 14 33c1.5-8 3-14 6-17z" fill="#ffd0cd"/>
+  <path d="M22 15.5c7-.8 15 1.5 20 7.5" stroke="#ed4c4c" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M32 24l2.4 6.1 6.5.3-5.15 4 1.75 6.3L32 37.1l-5.5 3.6 1.75-6.3-5.15-4 6.5-.3L32 24z" fill="#ed4c4c"/>
+</svg>

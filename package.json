@@ -1,0 +1,40 @@
+{
+  "name": "agentchicago17b",
+  "private": false,
+  "version": "0.1.0",
+  "description": "Open-source AI desk research agent that scopes questions, gathers sources, and synthesizes findings into research cards.",
+  "type": "module",
+  "license": "MIT",
+  "author": "AgentChicago17B Contributors",
+  "keywords": [
+    "ai-agent",
+    "desk-research",
+    "research-agent",
+    "open-source",
+    "synthesis",
+    "chicago"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test": "node scripts/run-regression.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "daisyui": "^5.7.16",
+    "oxlint": "^1.75.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0"
+  }
+}

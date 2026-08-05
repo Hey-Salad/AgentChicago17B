@@ -1,0 +1,105 @@
+{
+  "prompt": "desk research cards",
+  "results": [
+    {
+      "model": "meta/llama-3.1-8b-instruct",
+      "ok": true,
+      "score": 100.0,
+      "elapsed_s": 2.03,
+      "ttfb_s": 0.46,
+      "cards": 4,
+      "notes": "ttfb:0.5s; 2.0s; chars:1174",
+      "summary": "Synthesize findings into cards using clear titles, concise content, and effective design."
+    },
+    {
+      "model": "meta/llama-3.1-70b-instruct",
+      "ok": true,
+      "score": 73.0,
+      "elapsed_s": 144.44,
+      "ttfb_s": 0.33,
+      "cards": 4,
+      "notes": "ttfb:0.3s; 144.4s; chars:1680",
+      "summary": "AI desk research agents can synthesize findings into clear and concise cards using various methods."
+    },
+    {
+      "model": "meta/llama-3.3-70b-instruct",
+      "ok": true,
+      "score": 61.8,
+      "elapsed_s": 85.37,
+      "ttfb_s": 78.24,
+      "cards": 4,
+      "notes": "ttfb:78.2s; 85.4s; chars:703",
+      "summary": "Organize and connect findings"
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-nano-8b-v1",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:TimeoutError:The read operation timed out",
+      "summary": ""
+    },
+    {
+      "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:HTTPError:HTTP Error 404: Not Found",
+      "summary": ""
+    },
+    {
+      "model": "mistralai/mistral-7b-instruct-v0.3",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:HTTPError:HTTP Error 404: Not Found",
+      "summary": ""
+    },
+    {
+      "model": "mistralai/mistral-nemotron",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:TimeoutError:The read operation timed out",
+      "summary": ""
+    },
+    {
+      "model": "google/gemma-3-12b-it",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:HTTPError:HTTP Error 404: Not Found",
+      "summary": ""
+    },
+    {
+      "model": "ibm/granite-3.0-8b-instruct",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:HTTPError:HTTP Error 404: Not Found",
+      "summary": ""
+    },
+    {
+      "model": "z-ai/glm-5.2",
+      "ok": false,
+      "score": 0,
+      "elapsed_s": null,
+      "ttfb_s": null,
+      "cards": 0,
+      "notes": "error:TimeoutError:The read operation timed out",
+      "summary": ""
+    }
+  ]
+}
