@@ -4,6 +4,7 @@ import { AdminDashboardPage } from './admin/AdminDashboardPage'
 import { AdminPlaygroundPage } from './admin/AdminPlaygroundPage'
 import { AdminSkillsPage } from './admin/AdminSkillsPage'
 import { AdminUsersPage } from './admin/AdminUsersPage'
+import { EveDeskPage } from './admin/EveDeskPage'
 
 interface AdminPanelProps {
   page: AdminPageId
@@ -18,6 +19,7 @@ export function AdminPanel({ page, onNavigate }: AdminPanelProps) {
         <AdminDashboardPage onNavigate={onNavigate} />
       ) : null}
       {page === 'playground' ? <AdminPlaygroundPage /> : null}
+      {page === 'eve' ? <EveDeskPage /> : null}
       {page === 'skills' ? <AdminSkillsPage /> : null}
       {page === 'users' ? <AdminUsersPage /> : null}
     </div>

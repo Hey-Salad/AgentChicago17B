@@ -1,29 +1,41 @@
 {
   "name": "agentchicago17b",
   "private": false,
-  "version": "0.1.0",
-  "description": "Open-source AI desk research agent that scopes questions, gathers sources, and synthesizes findings into research cards.",
+  "version": "0.2.0",
+  "description": "Open-source AI desk research agent that scopes questions, gathers sources, and synthesizes findings into research cards. Includes Eve durable runtime (Vercel Workflows + Sandbox).",
   "type": "module",
   "license": "MIT",
   "author": "AgentChicago17B Contributors",
+  "engines": {
+    "node": ">=24"
+  },
   "keywords": [
     "ai-agent",
     "desk-research",
     "research-agent",
     "open-source",
     "synthesis",
-    "chicago"
+    "chicago",
+    "eve",
+    "vercel-sandbox",
+    "vercel-workflows"
   ],
   "scripts": {
     "dev": "vite",
+    "eve": "eve dev",
+    "eve:build": "eve build",
+    "eve:start": "eve start",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "node scripts/run-regression.mjs"
   },
   "dependencies": {
+    "ai": "^7.0.52",
+    "eve": "^0.30.6",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "zod": "^4.1.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

@@ -13,7 +13,7 @@ export type {
 
 export { RESEARCH_STAGES } from './types'
 export { runDeskResearch, stageLabel } from './pipeline'
-export type { DeskResearchOptions } from './pipeline'
+export type { DeskResearchOptions, SourceGatherOptions } from './pipeline'
 export { buildDemoBrief } from './demo'
 export {
   formatChicagoBibliographyEntry,

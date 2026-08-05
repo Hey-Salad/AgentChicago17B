@@ -67,9 +67,26 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173).
 - Live LLM needs a server-side `/api/llm/chat` adapter (Vite proxy is local-only)
 - Never commit `.env`
 
+## Eve durable runtime (Workflows + Sandbox)
+
+After `npm install`:
+
+```bash
+# Terminal A
+npm run eve
+
+# Terminal B
+npm run dev
+```
+
+Default: set `CF_ACCOUNT_ID` + `CF_API_TOKEN` so Eve uses **Cloudflare AI Gateway** / Workers AI (`@cf/zai-org/glm-5.2`). Open **Admin → Eve desk**.
+
+Guides: [eve-cloudflare.md](./eve-cloudflare.md) · [eve-integration.md](./eve-integration.md).
+
 ## Next reading
 
 - [architecture.md](./architecture.md) — pipeline diagrams
+- [eve-integration.md](./eve-integration.md) — Eve + Vercel Workflows + Sandbox
 - [cloudflare-setup.md](./cloudflare-setup.md)
 - [openrouter-setup.md](./openrouter-setup.md)
 - [auth-and-sharing.md](./auth-and-sharing.md)

@@ -75,6 +75,9 @@ flowchart TB
 | `vite.config.ts` | Dev proxy for CF / OpenRouter / NVIDIA / Whisper |
 | `prompts/` | Clone-and-adjust skill prompts |
 | `src/admin/` | Edit prompts, test models, operators |
+| `agent/` | **Eve** durable agent (Node + sandbox; models via Cloudflare AI Gateway) |
+| `agent/lib/model.ts` | Cloudflare / Vercel Gateway model resolver for Eve |
+| `src/eve/` | Browser client for Eve HTTP API (`/eve/v1`) |
 
 ## Brief data shape
 

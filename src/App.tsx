@@ -14,11 +14,14 @@ import { ADMIN_PAGES, type AdminPageId } from './admin/pages'
 import { AdminPanel } from './components/AdminPanel'
 import { ClarifyingQuestions } from './components/ClarifyingQuestions'
 import { CookingStatus } from './components/CookingStatus'
+import { IntegrationsPanel } from './components/IntegrationsPanel'
 import { ModelPicker } from './components/ModelPicker'
 import { ShareBriefBar } from './components/ShareBriefBar'
 import { SourceList } from './components/SourceList'
+import { SourcesPanel, SourcesRail } from './components/SourcesPanel'
 import { SynthesisBrief } from './components/SynthesisBrief'
 import { useVoiceInput } from './hooks/useVoiceInput'
+import { readSourcePolicy } from './lib/sourcePolicy'
 import './App.css'
 
 interface ClarifySession {
@@ -28,7 +31,7 @@ interface ClarifySession {
   assumptions: string[]
 }
 
-type AppView = 'research' | 'admin'
+type AppView = 'research' | 'sources' | 'integrations' | 'admin'
 
 const SUGGESTIONS = [
   'What is AgentChicago17B?',
@@ -102,13 +105,21 @@ export default function App() {
     setMessage('Starting desk research…')
 
     try {
+      const policy = readSourcePolicy()
       const result = await runDeskResearch(
         researchQuery,
         (update: Progress) => {
           setStage(update.stage)
           setMessage(update.message)
         },
-        { model: modelId },
+        {
+          model: modelId,
+          sourcePolicy: {
+            useWebSearch: policy.useWebSearch,
+            seedUrls: policy.seedUrls,
+            trustedDomains: policy.trustedDomains,
+          },
+        },
       )
       setBrief(result)
       setStage('complete')
@@ -211,6 +222,16 @@ export default function App() {
     setNavOpen(false)
   }
 
+  function openSources() {
+    setView('sources')
+    setNavOpen(false)
+  }
+
+  function openIntegrations() {
+    setView('integrations')
+    setNavOpen(false)
+  }
+
   function openAdmin(page: AdminPageId = 'dashboard') {
     setAdminPage(page)
     setView('admin')
@@ -218,9 +239,15 @@ export default function App() {
   }
 
   const adminOpen = view === 'admin'
+  const showSourcesRail = view === 'research' && (Boolean(brief) || running)
+  const tavilyConfigured = Boolean(
+    (import.meta.env.VITE_TAVILY_API_KEY as string | undefined)?.trim(),
+  )
 
   return (
-    <div className={`shell ${navOpen ? 'nav-open' : ''}`}>
+    <div
+      className={`shell ${navOpen ? 'nav-open' : ''} ${showSourcesRail ? 'has-sources-rail' : ''}`}
+    >
       <button
         type="button"
         className="sidebar-backdrop"
@@ -256,9 +283,21 @@ export default function App() {
             <IconSearch />
             Deep research
           </button>
-          <button type="button" className="nav-item" disabled title="Coming next">
+          <button
+            type="button"
+            className={`nav-item ${view === 'sources' ? 'is-active' : ''}`}
+            onClick={openSources}
+          >
             <IconLayers />
             Sources
+          </button>
+          <button
+            type="button"
+            className={`nav-item ${view === 'integrations' ? 'is-active' : ''}`}
+            onClick={openIntegrations}
+          >
+            <IconPlug />
+            Integrations
           </button>
 
           <div className="nav-group">
@@ -323,6 +362,10 @@ export default function App() {
                   Admin ·{' '}
                   {ADMIN_PAGES.find((p) => p.id === adminPage)?.label ?? 'Admin'}
                 </span>
+              ) : view === 'sources' ? (
+                <span>Sources · Gather policy</span>
+              ) : view === 'integrations' ? (
+                <span>Integrations · Live status</span>
               ) : running ? (
                 <span className="topbar-cooking">Cooking your brief…</span>
               ) : brief ? (
@@ -358,11 +401,19 @@ export default function App() {
 
         <main
           className={`canvas ${
-            view === 'admin' ? 'has-results' : hasResults ? 'has-results' : 'is-empty'
+            view === 'admin' || view === 'sources' || view === 'integrations'
+              ? 'has-results'
+              : hasResults
+                ? 'has-results'
+                : 'is-empty'
           }`}
         >
           {view === 'admin' ? (
             <AdminPanel page={adminPage} onNavigate={openAdmin} />
+          ) : view === 'sources' ? (
+            <SourcesPanel brief={brief} tavilyConfigured={tavilyConfigured} />
+          ) : view === 'integrations' ? (
+            <IntegrationsPanel />
           ) : !hasResults ? (
             <section className="empty-state">
               <div className="empty-brand">
@@ -528,6 +579,8 @@ export default function App() {
           </form>
         ) : null}
       </div>
+
+      {showSourcesRail ? <SourcesRail brief={brief} /> : null}
     </div>
   )
 }
@@ -605,6 +658,20 @@ function IconLayers() {
         d="M12 4l8 4-8 4-8-4 8-4zm0 8l8 4-8 4-8-4 8-4z"
         stroke="currentColor"
         strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconPlug() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+      <path
+        d="M9 7v4M15 7v4M8 11h8v2a4 4 0 01-4 4h0a4 4 0 01-4-4v-2zM12 17v3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

@@ -292,7 +292,18 @@ function normalizeWhisperResponse(payload: unknown): {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const eveTarget = (env.VITE_EVE_PROXY_TARGET || 'http://127.0.0.1:3000').replace(/\/$/, '')
   return {
     plugins: [react(), aiProxyPlugin(env)],
+    server: {
+      proxy: {
+        // Forward Admin → Eve desk calls to `npm run eve` (Workflows + Sandbox runtime).
+        // Eve serves under /eve/v1/* — keep the path prefix.
+        '/eve': {
+          target: eveTarget,
+          changeOrigin: true,
+        },
+      },
+    },
   }
 })

@@ -84,6 +84,8 @@ Brand kit lives in `public/brand/` (deep-dish mark + Chicago six-point star, Hey
 | [docs/cloudflare-setup.md](docs/cloudflare-setup.md) | Workers AI, Whisper, Pages, Access |
 | [docs/openrouter-setup.md](docs/openrouter-setup.md) | OpenRouter keys + models |
 | [docs/auth-and-sharing.md](docs/auth-and-sharing.md) | Auth wall + PDF / email share |
+| [docs/eve-integration.md](docs/eve-integration.md) | Eve runtime overview |
+| [docs/eve-cloudflare.md](docs/eve-cloudflare.md) | Eve + Cloudflare AI Gateway (GLM 5.2) |
 | [prompts/](prompts/) | Clone-and-adjust skill prompts |
 
 ---
@@ -120,6 +122,7 @@ Brand kit lives in `public/brand/` (deep-dish mark + Chicago six-point star, Hey
 | Voice input | Mic → Cloudflare Whisper transcription (live) |
 | Demo mode | Works with **no API keys** |
 | Live mode | Cloudflare Workers AI, OpenRouter, and/or NVIDIA (+ optional Tavily) |
+| Eve runtime | Durable sessions (Vercel Workflows) + isolated gather (Vercel Sandbox) under `agent/` |
 | Prompts | Editable skills in Admin + `prompts/*.md` for forks |
 | Admin | Test models, edit prompts, manage users (local studio) |
 | UI | HeySalad Chicago research desk — mark, wordmark, cherry accent |
@@ -226,12 +229,25 @@ AgentChicago17B/
 │   ├── components/             # Brief, sources, cooking status, admin UI
 │   └── hooks/                  # Voice input, etc.
 ├── public/brand/               # Official mark + lockup assets
+├── agent/                      # Eve durable agent (Workflows + Sandbox)
 ├── prompts/                    # Clone-and-adjust skill prompts
-├── docs/                       # Install, architecture, Cloudflare, OpenRouter
-├── vite.config.ts              # Dev server + /api/llm/chat (+ STT) proxy
+├── docs/                       # Install, architecture, Eve, Cloudflare, OpenRouter
+├── vite.config.ts              # Dev server + /api/llm/chat (+ /eve proxy)
 ├── .env.example
 └── README.md
 ```
+
+### Eve (durable) quick start
+
+```bash
+npm install
+# Terminal A
+npm run eve
+# Terminal B
+npm run dev
+```
+
+Then **Admin → Eve desk**. Details: [docs/eve-integration.md](docs/eve-integration.md).
 
 ---
 
@@ -478,10 +494,12 @@ The open-source goal is one shared **`/api/llm/chat` contract** so each host onl
 - [x] Admin studio + cloneable `prompts/`
 - [x] HeySalad Chicago research-desk UI + brand kit
 - [x] Install + architecture docs with diagrams
+- [x] Eve agent + Vercel Workflows/Sandbox integration (`agent/`, Admin Eve desk)
 
 ### Next
 
 - [ ] **Shared API adapter** — reference `/api/llm/chat` for Cloudflare, Vercel, Firebase, AWS, GCP, Azure
+- [ ] **Unify desks** — stream Eve briefs into the classic SynthesisBrief UI
 - [ ] **Real identity** — SSO-backed users, saved research, team workspaces
 - [ ] **Server email** — optional transactional send (vs mailto)
 - [ ] **Eval harness** — brief quality checks against golden questions

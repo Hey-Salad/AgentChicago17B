@@ -17,6 +17,12 @@ const ACTIONS: {
     cta: 'Open playground',
   },
   {
+    id: 'eve',
+    title: 'Eve desk (durable)',
+    help: 'Run research on Eve with Vercel Workflows + Sandbox isolation.',
+    cta: 'Open Eve',
+  },
+  {
     id: 'skills',
     title: 'Edit prompts',
     help: 'Change how Intent, Deliver, and Critique behave.',

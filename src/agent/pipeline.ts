@@ -37,6 +37,15 @@ function hasLlmConfig(): boolean {
   )
 }
 
+export interface SourceGatherOptions {
+  /** When false, skip Tavily even if a key exists. */
+  useWebSearch?: boolean
+  /** Extra URLs always merged into the source list. */
+  seedUrls?: string[]
+  /** Keep Tavily hits whose hostname matches (empty = keep all). */
+  trustedDomains?: string[]
+}
+
 export interface DeskResearchOptions {
   model?: string
   /** Skip live LLM/Tavily and use curated demo brief (tests / offline). */
@@ -45,6 +54,8 @@ export interface DeskResearchOptions {
   forceLive?: boolean
   /** Override theatrical stage delay (ms). Use 0 in tests. */
   stageDelayMs?: number
+  /** Classic Gather policy from the Sources panel. */
+  sourcePolicy?: SourceGatherOptions
   /**
    * Override Tavily key for this run.
    * Pass `null` to disable search even when env has a key.
@@ -145,21 +156,48 @@ async function runLiveResearch(
   onProgress?: ProgressCallback,
   options?: DeskResearchOptions,
 ): Promise<ResearchBrief> {
-  const tavilyKey = resolveTavilyKey(options)
+  const policy = options?.sourcePolicy
+  const wantSearch = policy?.useWebSearch !== false
+  const tavilyKey = wantSearch ? resolveTavilyKey(options) : undefined
   const withSearch = Boolean(tavilyKey)
   const fetchFn = resolveFetch(options)
+  const seedUrls = policy?.seedUrls ?? []
+  const trusted = (policy?.trustedDomains ?? [])
+    .map((d) => d.trim().toLowerCase().replace(/^www\./, ''))
+    .filter(Boolean)
 
   onProgress?.({
     stage: 'gather',
     message: withSearch
       ? 'Looking up fresh sources…'
-      : 'Working from what we know…',
+      : seedUrls.length > 0
+        ? 'Loading your seed URLs…'
+        : 'Working from what we know…',
     progress: 55,
   })
 
-  const sources = withSearch
+  let sources = withSearch
     ? await searchTavily(query, tavilyKey!, fetchFn)
-    : knowledgePlaceholderSources(query)
+    : []
+
+  if (withSearch && trusted.length > 0) {
+    const filtered = sources.filter((s) => {
+      const host = s.url ? safeHost(s.url)?.toLowerCase() : undefined
+      return host ? trusted.some((d) => host === d || host.endsWith(`.${d}`)) : false
+    })
+    if (filtered.length > 0) sources = filtered
+  }
+
+  if (seedUrls.length > 0) {
+    const seeds = await seedSourcesFromUrls(seedUrls, fetchFn)
+    sources = [...seeds, ...sources]
+  }
+
+  if (sources.length === 0) {
+    sources = knowledgePlaceholderSources(query)
+  }
+
+  const hasLiveSources = withSearch || seedUrls.length > 0
 
   onProgress?.({
     stage: 'synthesize',
@@ -170,7 +208,7 @@ async function runLiveResearch(
   let synthesis = await synthesizeWithLlm(
     query,
     sources,
-    withSearch,
+    hasLiveSources,
     options?.model,
     fetchFn,
   )
@@ -201,7 +239,7 @@ async function runLiveResearch(
       synthesis = await synthesizeWithLlm(
         query,
         sources,
-        withSearch,
+        hasLiveSources,
         options?.model,
         fetchFn,
         critique.revisionNotes,
@@ -251,6 +289,50 @@ function knowledgePlaceholderSources(query: string): Source[] {
       excerpt: `Live web search is not configured. Synthesis for “${query}” uses the connected LLM’s training knowledge only. Add VITE_TAVILY_API_KEY for real secondary sources.`,
     },
   ]
+}
+
+async function seedSourcesFromUrls(
+  urls: string[],
+  fetchFn: typeof fetch,
+): Promise<Source[]> {
+  const out: Source[] = []
+  for (const [index, raw] of urls.slice(0, 8).entries()) {
+    let url = raw.trim()
+    if (!url) continue
+    if (!/^https?:\/\//i.test(url)) url = `https://${url}`
+    try {
+      const res = await fetchFn(url, {
+        method: 'GET',
+        headers: { Accept: 'text/html,application/xhtml+xml,text/plain' },
+      })
+      const text = await res.text()
+      const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i)
+      const title = titleMatch?.[1]?.trim() || safeHost(url) || url
+      const excerpt = text
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 480)
+      out.push({
+        id: `seed-s${index + 1}`,
+        title,
+        url,
+        publisher: safeHost(url),
+        excerpt: excerpt || (res.ok ? 'Seed URL loaded.' : `Fetch status ${res.status}`),
+      })
+    } catch {
+      out.push({
+        id: `seed-s${index + 1}`,
+        title: safeHost(url) || url,
+        url,
+        publisher: safeHost(url),
+        excerpt: 'Could not fetch this seed URL from the browser (CORS or network). URL still cited.',
+      })
+    }
+  }
+  return out
 }
 
 async function searchTavily(

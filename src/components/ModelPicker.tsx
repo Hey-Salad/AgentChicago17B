@@ -106,7 +106,14 @@ function ModelOptionRow({
       className={`model-picker-option ${active ? 'is-active' : ''}`}
       onClick={() => onSelect(model)}
     >
-      <span className="model-picker-option-label">{model.label}</span>
+      <span className="model-picker-option-label">
+        {model.label}
+        {model.freeTier ? (
+          <span className="model-free-badge">Free</span>
+        ) : (
+          <span className="model-paid-badge">Paid</span>
+        )}
+      </span>
       <span className="model-picker-option-blurb">{model.blurb}</span>
     </button>
   )
