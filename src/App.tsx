@@ -15,6 +15,7 @@ import { AdminPanel } from './components/AdminPanel'
 import { ClarifyingQuestions } from './components/ClarifyingQuestions'
 import { CookingStatus } from './components/CookingStatus'
 import { ModelPicker } from './components/ModelPicker'
+import { ShareBriefBar } from './components/ShareBriefBar'
 import { SourceList } from './components/SourceList'
 import { SynthesisBrief } from './components/SynthesisBrief'
 import { useVoiceInput } from './hooks/useVoiceInput'
@@ -432,6 +433,7 @@ export default function App() {
                     <p>{brief.query.split('\n')[0]}</p>
                     <span>{modelLabel(modelId)}</span>
                   </div>
+                  <ShareBriefBar brief={brief} />
                   <SynthesisBrief brief={brief} />
                   <SourceList brief={brief} />
                 </>

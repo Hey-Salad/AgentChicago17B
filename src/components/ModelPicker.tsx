@@ -15,6 +15,7 @@ export function ModelPicker({ value, disabled, onChange }: ModelPickerProps) {
     RESEARCH_MODELS.find((model) => model.id === value) ?? RESEARCH_MODELS[0]
 
   const cloudflare = RESEARCH_MODELS.filter((m) => m.provider === 'cloudflare')
+  const openrouter = RESEARCH_MODELS.filter((m) => m.provider === 'openrouter')
   const nvidia = RESEARCH_MODELS.filter((m) => m.provider === 'nvidia')
 
   useEffect(() => {
@@ -57,6 +58,15 @@ export function ModelPicker({ value, disabled, onChange }: ModelPickerProps) {
         <div className="model-picker-menu" role="listbox" id={listId} tabIndex={-1}>
           <p className="model-picker-group">Cloudflare Workers AI</p>
           {cloudflare.map((model) => (
+            <ModelOptionRow
+              key={model.id}
+              model={model}
+              active={model.id === value}
+              onSelect={choose}
+            />
+          ))}
+          <p className="model-picker-group">OpenRouter</p>
+          {openrouter.map((model) => (
             <ModelOptionRow
               key={model.id}
               model={model}

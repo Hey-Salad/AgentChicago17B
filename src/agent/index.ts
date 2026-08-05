@@ -53,4 +53,5 @@ export {
   modelLabel,
   modelProvider,
   type ModelOption,
+  type ModelProvider,
 } from './models'

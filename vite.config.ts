@@ -23,6 +23,70 @@ function accountIdFromBase(baseUrl: string): string | null {
   return match?.[1] ?? null
 }
 
+type LlmProvider = 'cloudflare' | 'openrouter' | 'nvidia'
+
+function resolveLlmProvider(model: string, env: Record<string, string>): LlmProvider {
+  if (model.startsWith('@cf/')) return 'cloudflare'
+  if (model.startsWith('openrouter/')) return 'openrouter'
+  const forced = (env.VITE_LLM_PROVIDER || '').toLowerCase()
+  if (forced === 'openrouter' || forced === 'cloudflare' || forced === 'nvidia') {
+    return forced
+  }
+  const base = (env.VITE_LLM_BASE_URL || env.VITE_OPENROUTER_BASE_URL || '').toLowerCase()
+  if (base.includes('openrouter.ai')) return 'openrouter'
+  // Common OpenRouter slugs (not NVIDIA meta/ or z-ai/)
+  if (
+    model.includes('/') &&
+    !model.startsWith('meta/') &&
+    !model.startsWith('z-ai/') &&
+    (env.VITE_OPENROUTER_API_KEY || base.includes('openrouter'))
+  ) {
+    return 'openrouter'
+  }
+  return 'nvidia'
+}
+
+function llmUpstreamConfig(
+  provider: LlmProvider,
+  env: Record<string, string>,
+): {
+  baseUrl?: string
+  apiKey?: string
+  headers: Record<string, string>
+  error?: string
+} {
+  if (provider === 'cloudflare') {
+    return {
+      baseUrl: (env.VITE_CF_BASE_URL || env.VITE_LLM_BASE_URL || '').replace(/\/$/, ''),
+      apiKey: env.VITE_CF_API_KEY || env.VITE_LLM_API_KEY,
+      headers: {},
+      error: 'Cloudflare Workers AI is not configured (VITE_CF_API_KEY + VITE_CF_BASE_URL).',
+    }
+  }
+  if (provider === 'openrouter') {
+    return {
+      baseUrl: (
+        env.VITE_OPENROUTER_BASE_URL ||
+        env.VITE_LLM_BASE_URL ||
+        'https://openrouter.ai/api/v1'
+      ).replace(/\/$/, ''),
+      apiKey: env.VITE_OPENROUTER_API_KEY || env.VITE_LLM_API_KEY,
+      headers: {
+        'HTTP-Referer': env.VITE_APP_URL || 'http://127.0.0.1:5173',
+        'X-Title': env.VITE_APP_NAME || 'AgentChicago17B',
+      },
+      error:
+        'OpenRouter is not configured (VITE_OPENROUTER_API_KEY or VITE_LLM_API_KEY + OpenRouter base URL).',
+    }
+  }
+  return {
+    baseUrl: (env.VITE_LLM_BASE_URL || '').replace(/\/$/, ''),
+    apiKey: env.VITE_LLM_API_KEY,
+    headers: {},
+    error: 'NVIDIA LLM is not configured (VITE_LLM_API_KEY + VITE_LLM_BASE_URL).',
+  }
+}
+
 function runEndpoint(accountId: string, model: string): string {
   return `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`
 }
@@ -49,37 +113,31 @@ function aiProxyPlugin(env: Record<string, string>): Plugin {
             }
 
             const model = body.model || ''
-            const useCloudflare = model.startsWith('@cf/')
-            const baseUrl = (
-              useCloudflare
-                ? env.VITE_CF_BASE_URL || env.VITE_LLM_BASE_URL
-                : env.VITE_LLM_BASE_URL
-            )?.replace(/\/$/, '')
-            const apiKey = useCloudflare
-              ? env.VITE_CF_API_KEY || env.VITE_LLM_API_KEY
-              : env.VITE_LLM_API_KEY
+            const provider = resolveLlmProvider(model, env)
+            const { baseUrl, apiKey, headers, error } = llmUpstreamConfig(provider, env)
 
             if (!baseUrl || !apiKey) {
               res.statusCode = 500
               res.setHeader('Content-Type', 'application/json')
-              res.end(
-                JSON.stringify({
-                  error: useCloudflare
-                    ? 'Cloudflare Workers AI is not configured on the Vite server.'
-                    : 'NVIDIA LLM is not configured on the Vite server.',
-                }),
-              )
+              res.end(JSON.stringify({ error: error || 'LLM provider is not configured.' }))
               return
             }
+
+            // OpenRouter catalog ids are usually org/model (not openrouter/…)
+            const upstreamModel =
+              provider === 'openrouter' && model.startsWith('openrouter/')
+                ? model.replace(/^openrouter\//, '')
+                : model
 
             const upstream = await fetch(`${baseUrl}/chat/completions`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${apiKey}`,
+                ...headers,
               },
               body: JSON.stringify({
-                model,
+                model: upstreamModel === 'auto' ? 'openrouter/auto' : upstreamModel,
                 messages: body.messages,
                 temperature: body.temperature ?? 0.2,
                 max_tokens: body.max_tokens ?? 1600,

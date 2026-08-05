@@ -1,14 +1,17 @@
+export type ModelProvider = 'cloudflare' | 'nvidia' | 'openrouter'
+
 export interface ModelOption {
   id: string
   label: string
   blurb: string
-  provider: 'cloudflare' | 'nvidia'
+  provider: ModelProvider
 }
 
 /**
  * Models verified for desk-research JSON synthesis.
  * Cloudflare results: docs/cloudflare-model-benchmark.json
  * NVIDIA results: docs/model-benchmark.json
+ * OpenRouter: OpenAI-compatible router — pick any model your key can call.
  */
 export const RESEARCH_MODELS: ModelOption[] = [
   {
@@ -54,6 +57,30 @@ export const RESEARCH_MODELS: ModelOption[] = [
     provider: 'cloudflare',
   },
   {
+    id: 'openrouter/auto',
+    label: 'OpenRouter Auto',
+    blurb: 'Lets OpenRouter pick a strong available model',
+    provider: 'openrouter',
+  },
+  {
+    id: 'anthropic/claude-sonnet-4',
+    label: 'OR Claude Sonnet 4',
+    blurb: 'OpenRouter — excellent briefs (paid)',
+    provider: 'openrouter',
+  },
+  {
+    id: 'openai/gpt-4.1-mini',
+    label: 'OR GPT-4.1 Mini',
+    blurb: 'OpenRouter — fast structured JSON',
+    provider: 'openrouter',
+  },
+  {
+    id: 'meta-llama/llama-3.3-70b-instruct',
+    label: 'OR Llama 3.3 70B',
+    blurb: 'OpenRouter — open-weight workhorse',
+    provider: 'openrouter',
+  },
+  {
     id: 'meta/llama-3.1-8b-instruct',
     label: 'NVIDIA Llama 3.1 8B',
     blurb: 'Best NVIDIA free-tier option',
@@ -81,7 +108,15 @@ export function modelLabel(id: string): string {
   return RESEARCH_MODELS.find((model) => model.id === id)?.label ?? id
 }
 
-export function modelProvider(id: string): 'cloudflare' | 'nvidia' {
+export function modelProvider(id: string): ModelProvider {
   if (id.startsWith('@cf/')) return 'cloudflare'
-  return RESEARCH_MODELS.find((model) => model.id === id)?.provider ?? 'nvidia'
+  if (id.startsWith('openrouter/')) return 'openrouter'
+  const listed = RESEARCH_MODELS.find((model) => model.id === id)?.provider
+  if (listed) return listed
+  // Heuristic: org/model slugs that are not NVIDIA meta/ or z-ai/ go to OpenRouter
+  // when the OpenRouter base is configured; otherwise NVIDIA.
+  if (id.includes('/') && !id.startsWith('meta/') && !id.startsWith('z-ai/')) {
+    return 'openrouter'
+  }
+  return 'nvidia'
 }
