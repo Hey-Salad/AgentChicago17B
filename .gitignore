@@ -46,3 +46,4 @@ service-account*.json
 .wrangler
 .dev.vars
 .chicago-onboard.json
+*.tgz

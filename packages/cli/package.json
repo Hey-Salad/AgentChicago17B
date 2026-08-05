@@ -22,8 +22,7 @@
     "url": "https://github.com/Hey-Salad/AgentChicago17B/issues"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "engines": {
     "node": ">=20"
