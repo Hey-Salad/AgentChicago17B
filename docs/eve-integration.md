@@ -37,7 +37,7 @@ npm install
 ```
 
 **Default model path is Cloudflare AI Gateway** (GLM 5.2). Full guide:
-[eve-cloudflare.md](./eve-cloudflare.md).
+[eve-cloudflare.md](./eve-cloudflare.md). How to *describe* Eve backends (Gateway string vs LanguageModel): [eve-inference-providers.md](./eve-inference-providers.md).
 
 ```env
 EVE_LLM_BACKEND=cloudflare

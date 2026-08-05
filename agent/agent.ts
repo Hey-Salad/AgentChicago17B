@@ -1,10 +1,16 @@
 import { defineAgent } from 'eve'
+import { resolveEveModel } from './lib/model'
 
 /**
  * Durable AgentChicago17B on Eve.
- * String model → Vercel AI Gateway (OIDC on Vercel / AI_GATEWAY_API_KEY locally).
- * For Cloudflare Workers AI locally, set EVE_LLM_BACKEND=cloudflare and see agent/lib/model.ts.
+ *
+ * model shape:
+ * - string → Vercel AI Gateway id (e.g. zai/glm-5.2)
+ * - LanguageModel → direct provider (Cloudflare OpenAI-compatible, etc.)
+ *
+ * Resolution: agent/lib/model.ts · catalog: agent/lib/providers.ts
+ * Docs: docs/eve-inference-providers.md
  */
 export default defineAgent({
-  model: process.env.EVE_MODEL || 'zai/glm-5.2',
+  model: resolveEveModel(),
 })

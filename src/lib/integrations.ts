@@ -105,8 +105,8 @@ export async function eveIntegration(): Promise<IntegrationCard> {
         status: 'ready',
         detail: `Healthy at ${base}${health.workflowId ? ` · ${health.workflowId}` : ''}`,
         freeNote:
-          'Uses Vercel AI Gateway (zai/glm-5.2). Not the Cloudflare Free Neurons pool — needs Gateway/OIDC credits.',
-        docsHref: 'docs/eve-vercel-8step.md',
+          'Inference is separate from classic desk: Vercel AI Gateway string or Cloudflare LanguageModel — see docs/eve-inference-providers.md.',
+        docsHref: 'docs/eve-inference-providers.md',
       }
     }
     return {
