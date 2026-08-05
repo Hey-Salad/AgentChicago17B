@@ -2,7 +2,7 @@ const SESSION_KEY = 'agentchicago-auth-session-v1'
 
 export interface AuthSession {
   unlockedAt: string
-  method: 'access-code' | 'dev-bypass'
+  method: 'access-code' | 'dev-bypass' | 'remote-access-code'
 }
 
 function configuredCode(): string {
@@ -16,7 +16,12 @@ export function isAuthRequired(): boolean {
 }
 
 export function hasAccessCodeConfigured(): boolean {
-  return configuredCode().length > 0
+  // Remote Worker verification is always available in access-code mode.
+  return true
+}
+
+export function usesRemoteAccessCode(): boolean {
+  return !configuredCode()
 }
 
 export function readAuthSession(): AuthSession | null {
@@ -39,7 +44,7 @@ export function unlockWithAccessCode(code: string): { ok: boolean; error?: strin
   if (!expected) {
     return {
       ok: false,
-      error: 'No access code is configured. Set VITE_APP_ACCESS_CODE in .env and restart.',
+      error: 'Use remote unlock for cloud deployments.',
     }
   }
   if (code.trim() !== expected) {
@@ -51,6 +56,44 @@ export function unlockWithAccessCode(code: string): { ok: boolean; error?: strin
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return { ok: true }
+}
+
+/** Validate access code against the Worker (production / empty VITE_APP_ACCESS_CODE). */
+export async function unlockWithAccessCodeRemote(
+  code: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = code.trim()
+  if (!trimmed) {
+    return { ok: false, error: 'Enter an access code.' }
+  }
+
+  const expected = configuredCode()
+  if (expected) {
+    return unlockWithAccessCode(trimmed)
+  }
+
+  try {
+    const res = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: trimmed }),
+    })
+    const body = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean }
+    if (!res.ok || !body.ok) {
+      return { ok: false, error: body.error || 'That access code does not match.' }
+    }
+    const session: AuthSession = {
+      unlockedAt: new Date().toISOString(),
+      method: 'remote-access-code',
+    }
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    return { ok: true }
+  } catch {
+    return {
+      ok: false,
+      error: 'Could not reach the auth API. Is the Worker deployed?',
+    }
+  }
 }
 
 /** Local development only — never available in production builds. */

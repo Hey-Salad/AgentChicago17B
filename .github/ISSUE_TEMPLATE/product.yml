@@ -1,0 +1,47 @@
+name: Product / feature request
+description: Propose a product change for the desk agent or Chicago CLI
+title: "[product] "
+labels: ["enhancement", "product"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Product ideas land in [docs/PRODUCT_LOG.md](https://github.com/Hey-Salad/AgentChicago17B/blob/main/docs/PRODUCT_LOG.md) after triage.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New capability
+        - UX improvement
+        - Deploy / platform
+        - Security / trust
+        - Docs / DX
+        - Breaking change (needs major bump)
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who is stuck and what are they trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should ship? Include non-goals if clear.
+    validations:
+      required: true
+  - type: dropdown
+    id: train
+    attributes:
+      label: Release-train impact
+      options:
+        - Patch (fix / docs)
+        - Minor (new command / flag, backward compatible)
+        - Major (breaking CLI or auth behavior)
+        - Unsure
+    validations:
+      required: true

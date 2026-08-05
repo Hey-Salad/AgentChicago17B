@@ -78,10 +78,16 @@ flowchart TB
 | `agent/` | **Eve** durable agent (Node + sandbox; models via Cloudflare AI Gateway) |
 | `agent/lib/model.ts` | Cloudflare / Vercel Gateway model resolver for Eve |
 | `src/eve/` | Browser client for Eve HTTP API (`/eve/v1`) |
+| `workers/api/` | Cloudflare Worker: auth, D1 sessions, KV cache, R2, Vectorize RAG, LLM proxy |
+| `packages/cli/` | `chicago` CLI — onboard / configure / provision / deploy / doctor |
+| `docs/product-map.md` | Deployable instance product map |
+| `docs/using-chicago.md` | End-user guide for a live desk |
+| `docs/cloud-deploy.md` | Deploy your own agent on Cloudflare |
+| `docs/auth-modes.md` | Selectable auth adapters |
 
 ## Brief data shape
 
 A `ResearchBrief` holds `query`, `sources`, `angles`, `qa`, and a `synthesis`
 object (`title`, `executiveSummary`, `narrative`, findings, next steps, confidence).
-Share/export serializes that object — nothing leaves the browser unless the user
-opens email or downloads a file.
+Share/export serializes that object. On Cloudflare, briefs also persist to D1/R2
+and can be shared via `/api/share/:token`.

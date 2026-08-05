@@ -1,0 +1,64 @@
+# CI — AgentChicago17B + @heysalad/chicago
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: app (test · lint · build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+
+  chicago-cli:
+    name: chicago CLI package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax + help smoke
+        run: |
+          node --check bin/chicago.mjs
+          node bin/chicago.mjs help
+      - name: Pack inspect (no secrets in tarball)
+        run: |
+          npm pack
+          tar -tzf heysalad-chicago-*.tgz
+          if tar -tzf heysalad-chicago-*.tgz | grep -E '\.env|credentials|\.pem|\.key'; then
+            echo "::error::Secret-like path found in tarball"
+            exit 1
+          fi
+          # Fail if private key material sneaks into the published tarball
+          if tar -xOf heysalad-chicago-*.tgz | grep -E 'BEGIN (RSA |OPENSSH )?PRIVATE KEY'; then
+            echo "::error::Secret material detected in package contents"
+            exit 1
+          fi
+      - name: Dry-run publish
+        run: npm publish --dry-run

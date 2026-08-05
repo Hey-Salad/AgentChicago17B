@@ -28,7 +28,11 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node scripts/run-regression.mjs"
+    "test": "node scripts/run-regression.mjs",
+    "chicago": "node packages/cli/bin/chicago.mjs",
+    "cf:dev": "wrangler dev",
+    "cf:deploy": "npm run build && wrangler deploy",
+    "cf:migrations": "wrangler d1 migrations apply agentchicago17b --local"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^1.0.1",
@@ -48,6 +52,7 @@
     "oxlint": "^1.75.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "wrangler": "^4.54.0"
   }
 }

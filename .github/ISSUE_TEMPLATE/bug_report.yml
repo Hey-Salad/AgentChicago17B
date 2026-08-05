@@ -1,0 +1,56 @@
+name: Bug report
+description: Something is broken in the desk app, Worker, or @heysalad/chicago CLI
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Search [open bugs](https://github.com/Hey-Salad/AgentChicago17B/issues?q=is%3Aissue+label%3Abug) and skim [docs/BUG_LOG.md](https://github.com/Hey-Salad/AgentChicago17B/blob/main/docs/BUG_LOG.md) first.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Desk UI / Vite app
+        - Cloudflare Worker / API
+        - "@heysalad/chicago CLI"
+        - Auth / access code
+        - Inference / LLM proxy
+        - Deploy (Cloudflare / Vercel / Firebase)
+        - Eve sidecar
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Expected vs actual. Include commands and redacted logs.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: App version (package.json) and/or `npx @heysalad/chicago` version
+      placeholder: "@heysalad/chicago@0.1.0 · app 0.2.0"
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps. Prefer non-interactive CLI flags when relevant.
+      placeholder: |
+        npx @heysalad/chicago scaffold repro
+        cd repro && npm install
+        npx @heysalad/chicago doctor
+    validations:
+      required: true
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Secrets check
+      options:
+        - label: I have redacted access codes, API tokens, and `.env` values
+          required: true

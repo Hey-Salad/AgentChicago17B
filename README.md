@@ -21,6 +21,14 @@
   <img src="https://img.shields.io/badge/license-MIT-ed4c4c?style=flat-square" alt="MIT" />
   <img src="https://img.shields.io/badge/stack-Vite%20%2B%20React%20%2B%20TypeScript-111111?style=flat-square" alt="Stack" />
   <img src="https://img.shields.io/badge/brand-HeySalad-ed4c4c?style=flat-square" alt="HeySalad" />
+  <a href="https://www.npmjs.com/package/@heysalad/chicago"><img src="https://img.shields.io/npm/v/@heysalad/chicago?style=flat-square&color=ed4c4c" alt="npm @heysalad/chicago" /></a>
+</p>
+
+<p align="center">
+  <code>npx @heysalad/chicago scaffold</code> ·
+  <a href="docs/RELEASE_TRAIN.md">Release train</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SECURITY.md">Security</a>
 </p>
 
 ---
@@ -294,39 +302,32 @@ npm run preview
 
 ### 2. Cloudflare
 
-**Status: UI ready / proxy TBD** (Workers AI is already a first-class *model provider*; hosting the app on Cloudflare Pages/Workers is the next step)
+**Status: Ready now** (Worker API + selectable auth + D1/KV/R2/Vectorize — see [docs/product-map.md](docs/product-map.md))
 
 #### A. Use Cloudflare as the LLM provider (works locally today)
 
 Configure `.env` with `VITE_CF_*` as above and run locally. Models prefixed `@cf/` route through the Vite proxy to Workers AI.
 
-#### B. Host the UI on Cloudflare Pages
+#### B. Deploy the full instance (SPA + Worker)
 
-1. Push this repo to GitHub  
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → Connect repo  
-3. Build settings:
-   - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-4. Deploy  
-
-You get the branded UI + **demo mode**.
-
-#### C. Live mode on Cloudflare (recommended production shape)
-
-Add a **Pages Function** or **Worker** that implements:
-
-`POST /api/llm/chat` → forward to `.../ai/v1/chat/completions` with a **secret** API token (not a `VITE_` client var).
-
-Sketch:
-
-```
-functions/api/llm/chat.ts   # or wrangler Worker route
-secrets: CF_API_TOKEN, CF_ACCOUNT_ID
+```bash
+npm run chicago -- onboard       # interactive questions (QuickStart / Advanced)
+npm run chicago -- provision     # create D1 / KV / R2 / Vectorize
+# Create D1 / KV / R2 / Vectorize, paste ids into wrangler.toml
+npm run cf:deploy                # or: npm run chicago -- deploy
 ```
 
-Then point the frontend at same-origin `/api/llm/chat` (already the case).
+Or via the published CLI:
 
-Optional: bind **Workers AI** directly in the Worker instead of the REST URL.
+```bash
+npx @heysalad/chicago scaffold my-agent
+cd my-agent && npm install
+npx @heysalad/chicago onboard
+```
+
+Worker entry: [`workers/api/src/index.ts`](workers/api/src/index.ts). Auth modes: [docs/auth-modes.md](docs/auth-modes.md).
+
+Local without Wrangler: `npm run dev` serves an in-memory `/api/*` shim for sessions, cache, RAG, and memory.
 
 ---
 
@@ -548,11 +549,18 @@ You do **not** need a separate “README repo” — the README lives in this pr
 
 | Command | Purpose |
 |---------|---------|
-| `npm run dev` | Local app + LLM / STT proxy |
+| `npm run dev` | Local app + LLM / STT proxy + in-memory sessions/RAG API |
 | `npm run build` | Typecheck + production `dist/` |
 | `npm run preview` | Preview static build |
 | `npm test` | Regression harness |
 | `npm run lint` | Lint with oxlint |
+| `npm run chicago -- <cmd>` | Instance CLI — `onboard` / `configure` / `provision` / `deploy` / `doctor` |
+| `npm run cf:dev` | Wrangler Worker + assets |
+| `npm run cf:deploy` | Build + Wrangler deploy |
+
+Product map (auth adapters, D1/KV/R2/Vectorize, CLI): [docs/product-map.md](docs/product-map.md).  
+Using a deployed desk: [docs/using-chicago.md](docs/using-chicago.md).  
+Deploy your own on Cloudflare: [docs/cloud-deploy.md](docs/cloud-deploy.md).
 
 ---
 

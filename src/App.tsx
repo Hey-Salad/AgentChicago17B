@@ -22,6 +22,16 @@ import { SourcesPanel, SourcesRail } from './components/SourcesPanel'
 import { SynthesisBrief } from './components/SynthesisBrief'
 import { useVoiceInput } from './hooks/useVoiceInput'
 import { readSourcePolicy } from './lib/sourcePolicy'
+import {
+  cacheSynthesis,
+  createSession,
+  fetchSessions,
+  postSessionMessage,
+  ragIngest,
+  readCachedSynthesis,
+  saveBrief,
+  type SessionSummary,
+} from './lib/sessionsApi'
 import './App.css'
 
 interface ClarifySession {
@@ -60,6 +70,8 @@ export default function App() {
   const [brief, setBrief] = useState<ResearchBrief | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [history, setHistory] = useState<string[]>([])
+  const [sessions, setSessions] = useState<SessionSummary[]>([])
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [navOpen, setNavOpen] = useState(false)
   const [view, setView] = useState<AppView>('research')
   const [adminPage, setAdminPage] = useState<AdminPageId>('dashboard')
@@ -86,6 +98,19 @@ export default function App() {
     }
   }, [theme])
 
+  useEffect(() => {
+    void refreshSessions()
+  }, [])
+
+  async function refreshSessions() {
+    try {
+      const list = await fetchSessions()
+      setSessions(list)
+    } catch {
+      // Local API may be cold or auth not ready — keep query history fallback.
+    }
+  }
+
   function toggleTheme() {
     const root = document.documentElement
     root.classList.add('theme-animating')
@@ -104,8 +129,40 @@ export default function App() {
     setStage('scope')
     setMessage('Starting desk research…')
 
+    let sessionId = activeSessionId
+    try {
+      if (!sessionId) {
+        const created = await createSession(researchQuery.slice(0, 80))
+        sessionId = created.id
+        setActiveSessionId(sessionId)
+      }
+      await postSessionMessage(sessionId, {
+        role: 'user',
+        content: researchQuery,
+      })
+    } catch {
+      /* persistence optional during cook */
+    }
+
     try {
       const policy = readSourcePolicy()
+      const cacheKey = `${modelId}:${researchQuery.trim().toLowerCase()}`
+      try {
+        const cached = await readCachedSynthesis(cacheKey)
+        if (cached && typeof cached === 'object') {
+          const hit = cached as ResearchBrief
+          if (hit.synthesis?.executiveSummary) {
+            setBrief(hit)
+            setStage('complete')
+            setMessage('Loaded from cache')
+            setRunning(false)
+            return
+          }
+        }
+      } catch {
+        /* no cache */
+      }
+
       const result = await runDeskResearch(
         researchQuery,
         (update: Progress) => {
@@ -125,6 +182,33 @@ export default function App() {
       setStage('complete')
       setMessage(result.stageMessage)
       if (result.error) setError(result.error)
+
+      if (sessionId) {
+        try {
+          await postSessionMessage(sessionId, {
+            role: 'assistant',
+            content: result.synthesis.executiveSummary,
+            stage: 'complete',
+          })
+          await saveBrief({
+            sessionId,
+            query: researchQuery,
+            brief: result,
+            markdown: result.synthesis.narrative,
+          })
+          await cacheSynthesis(cacheKey, result)
+          const ragTexts = [
+            result.synthesis.executiveSummary,
+            result.synthesis.narrative,
+            ...result.synthesis.keyFindings,
+            ...result.sources.map((s) => `${s.title}: ${s.excerpt || ''}`),
+          ].filter(Boolean)
+          await ragIngest(ragTexts)
+          await refreshSessions()
+        } catch {
+          /* persistence best-effort */
+        }
+      }
     } catch (err) {
       const text = err instanceof Error ? err.message : 'Research failed'
       setError(text)
@@ -213,8 +297,18 @@ export default function App() {
     setIntentBusy(false)
     setStage('idle')
     setMessage('')
+    setActiveSessionId(null)
     setView('research')
     setNavOpen(false)
+  }
+
+  async function openSavedSession(session: SessionSummary) {
+    setActiveSessionId(session.id)
+    setNavOpen(false)
+    setView('research')
+    setQuery(session.title)
+    // Re-run from title is a simple resume; full message restore can load via fetchSession later.
+    void handleResearch(session.title, { skipIntent: true })
   }
 
   function openResearch() {
@@ -317,21 +411,34 @@ export default function App() {
 
         <div className="side-section grow">
           <p className="side-label">Your research</p>
-          {history.length === 0 ? (
+          {sessions.length === 0 && history.length === 0 ? (
             <p className="side-muted">No research yet</p>
           ) : (
             <ul className="history-list">
-              {history.map((item) => (
-                <li key={item}>
-                  <button
-                    type="button"
-                    onClick={() => void handleResearch(item)}
-                    disabled={running || intentBusy}
-                  >
-                    {item}
-                  </button>
-                </li>
-              ))}
+              {sessions.length > 0
+                ? sessions.map((session) => (
+                    <li key={session.id}>
+                      <button
+                        type="button"
+                        className={activeSessionId === session.id ? 'is-active' : undefined}
+                        onClick={() => void openSavedSession(session)}
+                        disabled={running || intentBusy}
+                      >
+                        {session.title}
+                      </button>
+                    </li>
+                  ))
+                : history.map((item) => (
+                    <li key={item}>
+                      <button
+                        type="button"
+                        onClick={() => void handleResearch(item)}
+                        disabled={running || intentBusy}
+                      >
+                        {item}
+                      </button>
+                    </li>
+                  ))}
             </ul>
           )}
         </div>

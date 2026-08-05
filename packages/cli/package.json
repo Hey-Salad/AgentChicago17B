@@ -1,0 +1,39 @@
+{
+  "name": "@heysalad/chicago",
+  "version": "0.1.1",
+  "description": "CLI to scaffold, configure, and deploy AgentChicago17B on Cloudflare, Vercel, or Firebase",
+  "keywords": [
+    "agentchicago",
+    "research-agent",
+    "cloudflare",
+    "workers",
+    "cli",
+    "heysalad"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hey-Salad/AgentChicago17B.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Hey-Salad/AgentChicago17B/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/Hey-Salad/AgentChicago17B/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "chicago": "bin/chicago.mjs"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "CHANGELOG.md"
+  ]
+}

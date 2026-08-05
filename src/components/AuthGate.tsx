@@ -1,27 +1,40 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import {
-  hasAccessCodeConfigured,
   isAuthRequired,
   isUnlocked,
   lockSession,
   unlockDevBypass,
-  unlockWithAccessCode,
+  unlockWithAccessCodeRemote,
+  usesRemoteAccessCode,
 } from '../auth/authSession'
+import {
+  authModeLabel,
+  getOrCreateDeviceId,
+  resolveAuthMode,
+  type AuthMode,
+} from '../auth/modes'
+import { rememberAccessCode } from '../lib/apiClient'
 
 interface AuthGateProps {
   children: ReactNode
 }
 
 export function AuthGate({ children }: AuthGateProps) {
-  const [authed, setAuthed] = useState(() => isUnlocked())
+  const mode = resolveAuthMode()
+  const [authed, setAuthed] = useState(() => gateUnlocked(mode))
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
-  if (!isAuthRequired() || authed) {
+  if (
+    passesWithoutLocalGate(mode) ||
+    (isAuthRequired() === false && mode !== 'access-code') ||
+    authed
+  ) {
     return (
       <>
         {children}
-        {isAuthRequired() ? (
+        {mode === 'access-code' && isAuthRequired() ? (
           <button
             type="button"
             className="auth-lock-fab"
@@ -39,15 +52,60 @@ export function AuthGate({ children }: AuthGateProps) {
     )
   }
 
-  function onSubmit(event: FormEvent) {
+  if (mode === 'oauth') {
+    return (
+      <div className="auth-gate">
+        <div className="auth-card">
+          <p className="auth-brand">
+            Agent<span className="auth-accent">Chicago</span>17B
+          </p>
+          <h1>OAuth sign-in</h1>
+          <p className="auth-lede">
+            Auth mode is <strong>oauth</strong>. The Worker adapter is stubbed in v1 — set{' '}
+            <code>OAUTH_CLIENT_ID</code> / <code>OAUTH_CLIENT_SECRET</code> and complete the
+            redirect flow, or switch to <code>access-code</code> / <code>anonymous</code> for now.
+          </p>
+          <p className="auth-lede">
+            See <code>docs/auth-modes.md</code>.
+          </p>
+          {import.meta.env.DEV ? (
+            <button
+              type="button"
+              className="auth-dev"
+              onClick={() => {
+                const result = unlockDevBypass()
+                if (result.ok) setAuthed(true)
+                else setError(result.error || 'Bypass failed')
+              }}
+            >
+              Local only — continue without OAuth
+            </button>
+          ) : null}
+          {error ? (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
+  async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    const result = unlockWithAccessCode(code)
-    if (!result.ok) {
-      setError(result.error || 'Could not unlock')
-      return
-    }
+    setBusy(true)
     setError(null)
-    setAuthed(true)
+    try {
+      const result = await unlockWithAccessCodeRemote(code)
+      if (!result.ok) {
+        setError(result.error || 'Could not unlock')
+        return
+      }
+      rememberAccessCode(code)
+      setAuthed(true)
+    } finally {
+      setBusy(false)
+    }
   }
 
   function onDevBypass() {
@@ -73,26 +131,15 @@ export function AuthGate({ children }: AuthGateProps) {
         <p className="auth-brand">
           Agent<span className="auth-accent">Chicago</span>17B
         </p>
-        <p className="auth-byline">Open source by HeySalad</p>
+        <p className="auth-byline">Open source by HeySalad · {authModeLabel(mode)}</p>
         <h1>Sign in to the research desk</h1>
         <p className="auth-lede">
-          This workspace sits behind an access wall. Enter the shared team code, or put{' '}
-          <strong>Cloudflare Access</strong> in front for production SSO.
+          {usesRemoteAccessCode()
+            ? 'Enter the shared access code for this cloud instance. The code is checked by your Worker — it is not stored in the page bundle.'
+            : 'Enter the shared team code configured in .env, or put Cloudflare Access in front for production SSO.'}
         </p>
 
-        {!hasAccessCodeConfigured() ? (
-          <div className="auth-setup" role="status">
-            <p>
-              No <code>VITE_APP_ACCESS_CODE</code> is set yet. Add one to{' '}
-              <code>.env</code>, restart <code>npm run dev</code>, then unlock here.
-            </p>
-            <p>
-              See <code>docs/INSTALL.md</code> and <code>docs/auth-and-sharing.md</code>.
-            </p>
-          </div>
-        ) : null}
-
-        <form className="auth-form" onSubmit={onSubmit}>
+        <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label htmlFor="access-code">Access code</label>
           <input
             id="access-code"
@@ -101,15 +148,15 @@ export function AuthGate({ children }: AuthGateProps) {
             value={code}
             onChange={(event) => setCode(event.target.value)}
             placeholder="Team access code"
-            disabled={!hasAccessCodeConfigured()}
+            disabled={busy}
           />
           {error ? (
             <p className="auth-error" role="alert">
               {error}
             </p>
           ) : null}
-          <button type="submit" className="auth-submit" disabled={!hasAccessCodeConfigured()}>
-            Unlock desk
+          <button type="submit" className="auth-submit" disabled={busy || !code.trim()}>
+            {busy ? 'Checking…' : 'Unlock desk'}
           </button>
         </form>
 
@@ -121,4 +168,19 @@ export function AuthGate({ children }: AuthGateProps) {
       </div>
     </div>
   )
+}
+
+function passesWithoutLocalGate(mode: AuthMode): boolean {
+  if (mode === 'cf-access') return true
+  if (mode === 'anonymous') {
+    getOrCreateDeviceId()
+    return true
+  }
+  if (!isAuthRequired() && mode !== 'oauth') return true
+  return false
+}
+
+function gateUnlocked(mode: AuthMode): boolean {
+  if (passesWithoutLocalGate(mode)) return true
+  return isUnlocked()
 }

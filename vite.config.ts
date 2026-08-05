@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { localCloudApiPlugin } from './vite.localApi.ts'
 
 const WHISPER_MODEL =
   process.env.VITE_CF_WHISPER_MODEL || '@cf/openai/whisper-large-v3-turbo'
@@ -294,7 +295,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const eveTarget = (env.VITE_EVE_PROXY_TARGET || 'http://127.0.0.1:3000').replace(/\/$/, '')
   return {
-    plugins: [react(), aiProxyPlugin(env)],
+    plugins: [react(), localCloudApiPlugin(env), aiProxyPlugin(env)],
     server: {
       proxy: {
         // Forward Admin → Eve desk calls to `npm run eve` (Workflows + Sandbox runtime).

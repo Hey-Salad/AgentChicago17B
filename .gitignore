@@ -42,3 +42,7 @@ service-account*.json
 *.sw?
 .vercel
 .env*
+!.env.example
+.wrangler
+.dev.vars
+.chicago-onboard.json

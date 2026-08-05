@@ -1,0 +1,154 @@
+# Release train — split prepare / publish
+
+# 1) workflow_dispatch: bump version on main + push tag chicago-cli-v*
+# 2) push tag: gate CI → npm + GitHub Packages + GitHub Release (tarball attached)
+
+name: release-chicago
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver bump for packages/cli
+        required: true
+        type: choice
+        options: [patch, minor, major]
+      dry_run:
+        description: Bump locally in the runner only — do not push tag or commit
+        required: true
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'chicago-cli-v*'
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+jobs:
+  prepare:
+    if: github.event_name == 'workflow_dispatch'
+    name: prepare (bump + tag)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bump packages/cli version
+        working-directory: packages/cli
+        run: npm version "${{ inputs.bump }}" --no-git-tag-version
+      - name: Show version
+        id: ver
+        working-directory: packages/cli
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=chicago-cli-v${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Commit, tag, push
+        if: ${{ inputs.dry_run == false }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/cli/package.json packages/cli/CHANGELOG.md || true
+          git commit -m "release(@heysalad/chicago): v${{ steps.ver.outputs.version }}" || {
+            echo "Nothing to commit — ensure version changed"
+            exit 1
+          }
+          git tag -a "${{ steps.ver.outputs.tag }}" -m "Chicago CLI ${{ steps.ver.outputs.version }}"
+          git push origin HEAD:main
+          git push origin "${{ steps.ver.outputs.tag }}"
+      - name: Dry-run summary
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "Would release @heysalad/chicago@${{ steps.ver.outputs.version }} (tag ${{ steps.ver.outputs.tag }})"
+          echo "Re-run with dry_run=false to push tag and trigger publish."
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/chicago-cli-v')
+    name: publish npm + GH Packages + Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+          scope: '@heysalad'
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+      - name: CLI pack hygiene
+        working-directory: packages/cli
+        run: |
+          set -euo pipefail
+          node --check bin/chicago.mjs
+          VERSION="$(node -p "require('./package.json').version")"
+          EXPECTED="${GITHUB_REF_NAME#chicago-cli-v}"
+          if [[ "$EXPECTED" != "$VERSION" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME != package.json $VERSION"
+            exit 1
+          fi
+          npm pack
+          if tar -xOf heysalad-chicago-*.tgz | grep -E 'BEGIN (RSA |OPENSSH )?PRIVATE KEY'; then
+            echo "::error::Secret material in tarball"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TARBALL=$(ls heysalad-chicago-*.tgz | head -1)" >> "$GITHUB_ENV"
+      - name: Publish npmjs @heysalad/chicago
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
+      - name: Publish GitHub Packages @hey-salad/chicago
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cp package.json package.json.npmjs
+          node <<'NODE'
+          const fs = require('fs')
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+          pkg.name = '@hey-salad/chicago'
+          pkg.publishConfig = {
+            access: 'public',
+            registry: 'https://npm.pkg.github.com',
+          }
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n')
+          NODE
+          printf '%s\n' '@hey-salad:registry=https://npm.pkg.github.com' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' > .npmrc
+          npm publish
+          mv package.json.npmjs package.json
+          rm -f .npmrc
+      - name: GitHub Release + attach tarball
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "@heysalad/chicago@${{ env.VERSION }}"
+          generate_release_notes: true
+          body: |
+            ## `@heysalad/chicago@${{ env.VERSION }}`
+
+            | Registry | Package |
+            | --- | --- |
+            | npmjs | https://www.npmjs.com/package/@heysalad/chicago |
+            | GitHub Packages | `@hey-salad/chicago` (`npm.pkg.github.com`) |
+
+            ```bash
+            npx @heysalad/chicago@${{ env.VERSION }} scaffold
+            ```
+
+            Release train: [docs/RELEASE_TRAIN.md](docs/RELEASE_TRAIN.md)
+          files: packages/cli/${{ env.TARBALL }}

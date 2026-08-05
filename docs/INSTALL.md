@@ -26,9 +26,23 @@ cp .env.example .env
 Minimum for a private local desk:
 
 ```env
+VITE_AUTH_MODE=access-code
 VITE_AUTH_REQUIRED=true
 VITE_APP_ACCESS_CODE=choose-a-strong-shared-code
 ```
+
+Auth adapters (`access-code` · `cf-access` · `oauth` · `anonymous`): [auth-modes.md](./auth-modes.md).  
+Product map (sessions, RAG, CLI deploy): [product-map.md](./product-map.md).  
+End users: [using-chicago.md](./using-chicago.md).  
+Cloud deploy: [cloud-deploy.md](./cloud-deploy.md).
+
+```bash
+npm run chicago -- onboard
+npm run chicago -- configure --access-code your-code
+npm run chicago -- doctor
+```
+
+OpenClaw-style install questions (QuickStart / Advanced, auth, inference, deploy target): [chicago-cli.md](./chicago-cli.md).
 
 Pick **one** LLM path (or configure several and switch in the model picker):
 
