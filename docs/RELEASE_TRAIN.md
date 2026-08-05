@@ -10,7 +10,7 @@ Incremental releases without breaking consumers.
    - **patch** — bugfix, docs in the package, security hardening, no flag changes
    - **minor** — new commands / flags / deploy targets, backward compatible
    - **major** — removed flags, changed defaults that break scripts, auth behavior changes
-4. **One artifact, three homes** — same tarball → npmjs `@heysalad/chicago`, GitHub Packages `@hey-salad/chicago`, GitHub Release asset.
+4. **One artifact, three homes** — same tarball → npmjs `@heysalad/chicago`, GitHub Release asset, and (when org package permissions allow) GitHub Packages `@hey-salad/chicago`.
 
 ## How to cut a release
 
@@ -35,9 +35,9 @@ Tag must match `packages/cli/package.json` version.
 
 | Name | Where | Purpose |
 | --- | --- | --- |
-| `NPM_TOKEN` | Repo → Settings → Secrets | Automation token with publish to `@heysalad` |
-| `GITHUB_TOKEN` | Automatic | Packages + Releases |
-| Packages write | Workflow `permissions.packages: write` | `@hey-salad/chicago` on `npm.pkg.github.com` |
+| `NPM_TOKEN` | Repo → Settings → Secrets | Automation token with publish to `@heysalad` on npmjs |
+| `GITHUB_TOKEN` | Automatic | Releases + (with org **Packages** write) GitHub Packages mirror |
+| Packages write | Org/repo Actions permissions | Enable “Read and write” for workflows + allow `GITHUB_TOKEN` to publish packages |
 
 First-time npm: `npm token create` (classic automation) while logged in as an `@heysalad` org member.
 
